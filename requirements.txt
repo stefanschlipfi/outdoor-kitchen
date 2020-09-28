@@ -1,0 +1,8 @@
+IPython
+flask
+#websocket module
+flask-socketio
+eventlet
+
+#for server tmp
+psutil
