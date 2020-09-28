@@ -27,9 +27,9 @@ class Sensor():
                     dht_dict = {}
 
                 for sensor in sensor_list:
-                    sensor_dict = self.load_dht22(sensor.gpio_port)
-                    sensor_dict.update({'name':sensor.name})
-                    dht_dict.update({sensor.name:sensor_dict})
+                    sensor_dict = self.load_dht22(sensor["gpio_port"])
+                    sensor_dict.update({'name':sensor["name"]})
+                    dht_dict.update({sensor["name"]:sensor_dict})
                 device_dict.update({'DHT22':dht_dict})
 
         return device_dict
@@ -44,4 +44,5 @@ class Sensor():
         humidity,temp = Adafruit_DHT.read_retry(self.DHT_Sensor,gpio_port)
         humidity = format(humidity, '.2f')
         temp = format(temp, '.2f')
+        logger.debug('GPIO_PORT: {0}, temp: {1}, humidity: {2}'.format(gpio_port,temp,humidity))
         return {'humidity':humidity,'temperature':temp,'gpio_port':gpio_port}

@@ -15,7 +15,7 @@
 
 
     <div class="container">
-        <h1>Welecome to Server TEMP Viewer</h1>
+        <h1>Welecome to Outdoor-Kitchen TEMP Viewer</h1>
 
         <div id="server-temperature-div">
             <!-- dynamic created by js -->
@@ -31,39 +31,42 @@
     
         var colors = {'good':'bg-success','warning':'bg-warning','danger':'bg-danger'};
 
-        namespace = '/ws_cpu_temp';
+        namespace = '/ws_sensors';
         socket = io.connect(namespace);
         var server = $('#server-temperature-div')
 
-        socket.on('server temperature',function(msg){
+        socket.on('sensors',function(msg){
             
             server.empty()
-            for (const[device,props] of Object.entries(msg)){
-
-                progress_bar = $('<div/>')
-                progress_bar.addClass('progress')
+            for (const[device,sensors_dict] of Object.entries(msg.sensors_dict)){
                 
-                label = $('<h5/>')
-                label.text(device + ' Temperature: ' + props.temperature + '°C')
+                for (const[name,props] of Object.entries(sensors_dict)){
 
-                progress_item = $('<div/>')
-                progress_item.addClass('progress-bar')
-                progress_item.attr('rule','progressbar')
-                progress_item.attr('aria-valuemin','0')
-                progress_item.attr('aria-valuemax','100')
-                progress_item.innerHTML = props.temperature
-                progress_item.css('width',props.temperature +'%')
+                    progress_bar = $('<div/>')
+                    progress_bar.addClass('progress')
+                    
+                    label = $('<h5/>')
+                    label.text(name + ' Temperature: ' + props.temperature + '°C')
 
-                if (props.temperature < 50)
-                    progress_item.addClass(colors['good'])
-                else if (props.temperature > 50 && props.temperature < 55)
-                    progress_item.addClass(colors['warning'])
-                else
-                    progress_item.addClass(colors['danger'])
+                    progress_item = $('<div/>')
+                    progress_item.addClass('progress-bar')
+                    progress_item.attr('rule','progressbar')
+                    progress_item.attr('aria-valuemin','0')
+                    progress_item.attr('aria-valuemax','100')
+                    progress_item.innerHTML = props.temperature
+                    progress_item.css('width',props.temperature +'%')
 
-                progress_bar.append(progress_item)
-                server.append(label)
-                server.append(progress_bar)
+                    if (props.temperature < 50)
+                        progress_item.addClass(colors['good'])
+                    else if (props.temperature > 50 && props.temperature < 55)
+                        progress_item.addClass(colors['warning'])
+                    else
+                        progress_item.addClass(colors['danger'])
+
+                    progress_bar.append(progress_item)
+                    server.append(label)
+                    server.append(progress_bar)
+                }
             };
         });
        

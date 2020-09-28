@@ -1,7 +1,7 @@
 import logging,json
 
 def load_conf():
-    with open('/opt/server-monitor/conf.json') as json_file:
+    with open('/home/stefan/develop/outdoor-kitchen/conf.json') as json_file:
         json_obj = json.load(json_file)
 
     return json_obj

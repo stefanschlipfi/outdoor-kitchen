@@ -1,5 +1,5 @@
 from threading import Thread
-from sensor import get_temperature
+from sensor import Sensor
 from time import sleep
 
 from utils import *
@@ -19,10 +19,12 @@ class TempThread(Thread):
         Get temperature from sensor.py
         """
         logger.info("Entered infinity loop, delay: {}".format(self.delay))
+        s = Sensor()
+
         while True:
-            
-            temp_dict = get_sensors()
-            self.socketio.emit('server temperature',temp_dict,namespace = self.namespace)
+                
+            sensors_dict = s.load_senors()
+            self.socketio.emit('sensors',{'sensors_dict':sensors_dict},namespace = self.namespace)
             sleep(self.delay)
 
     def run(self):

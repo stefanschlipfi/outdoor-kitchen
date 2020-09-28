@@ -6,3 +6,6 @@ eventlet
 
 #for server tmp
 psutil
+
+#for dht22
+Adafruit_DHT
