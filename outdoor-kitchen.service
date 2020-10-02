@@ -1,0 +1,9 @@
+[Unit]
+Description=Outdoor Kitchen Flask APP
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/outdoor_kitchen/run.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 from utils import *
 import psutil
 
-init_logger(filename='sensor.log',stream=False,logger_name='sensor')
+init_logger(loglevel='DEBUG',filename='sensor.log',stream=False,logger_name='sensor')
 import logging
 logger = logging.getLogger('sensor')
 

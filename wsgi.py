@@ -1,6 +1,6 @@
 import sys
 
-path = '/opt/server-monitor/backend/'
+path = '/opt/outdoor_kitchen/backend/'
 if not path in sys.path:
     sys.path.append(path)
 

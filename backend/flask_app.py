@@ -1,6 +1,9 @@
 from flask import Flask,render_template
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'J$eEV§0uzGzjRxTC$DM2LKy!'
+app.config['SECRET_KEY'] = 'JdeEVd0uzGzjRxTC$DM2LKy!'
+
+import sys
+sys.path.append('/opt/outdoor_kitchen/backend')
 
 #websocket
 from flask_socketio import SocketIO, emit

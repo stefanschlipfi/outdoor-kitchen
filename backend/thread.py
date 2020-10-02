@@ -9,7 +9,7 @@ logger = logging.getLogger('thread')
 
 class TempThread(Thread):
     def __init__(self,socketio,namespace):
-        self.delay = 1
+        self.delay = 5
         self.socketio = socketio
         self.namespace = namespace
         super().__init__()
