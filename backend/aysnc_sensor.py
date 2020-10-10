@@ -1,6 +1,7 @@
 import threading
 from utils import *
 import psutil
+from time import sleep
 
 init_logger(loglevel='DEBUG',filename='aysnc_sensor.log',stream=False,logger_name='sensor')
 import logging
@@ -9,14 +10,25 @@ logger = logging.getLogger('sensor')
 #dht sensor
 import Adafruit_DHT
 
+#mongo
+from pymongo import MongoClient
+
 class ThreadSensor(threading.Thread):
-    def __init__(self,sensor_dict):
+    def __init__(self,sensor_dict,DELAY = 5):
         """
         @sensor_dict bus_id / gpio_port, sensor_type
         """
         super().__init__()
         self.DHT_Sensor = Adafruit_DHT.DHT22
+        self.DELAY = DELAY
+        self.stop_loop = False
         
+        #mongo client
+        mongo_client = MongoClient()
+        self.mongo_db = mongo_client["outdoor-kitchen"]
+        self.mongo_sensors = self.mongo_db["sensors"]
+
+
         if not isinstance(sensor_dict,dict):
             logger.error("sensor_dict musst be a dict")
             raise ValueError("sensor_dict musst be a dict")
@@ -56,10 +68,15 @@ class ThreadSensor(threading.Thread):
         load sensor with attr from sensor_dict
         return new sensor_dict
         """
-        new_sensor_dict = self.sensor_dict
+        #remove error if extsts
+        try:
+            self.sensor_dict.pop("error")
+        except:
+            pass
+
         if self.sensor_type == "DHT22":
-            new_sensor_dict.update(self.load_dht22(self.gpio_port))
-        return new_sensor_dict
+            self.sensor_dict.update(self.load_dht22(self.gpio_port))
+        return self.sensor_dict
             
 
     def load_dht22(self,gpio_port):
@@ -69,16 +86,37 @@ class ThreadSensor(threading.Thread):
         return dict
         """
         try:
-            humidity,temp = Adafruit_DHT.read_retry(self.DHT_Sensor,gpio_port)
+            humidity,temp = Adafruit_DHT.read(self.DHT_Sensor,gpio_port)
             if humidity == None and temp == None:
                 raise Exception("cannot read gpio_port")
         except Exception as e:
             logger.exception(e)
             logger.error("failed to read data from gpio_port: {}".format(gpio_port))
-            return {'humidity':None,'temperature':None,'gpio_port':gpio_port,"error":e}
+            return {'humidity':None,'temperature':None,'gpio_port':gpio_port,"error":str(e)}
         else:
             humidity = format(humidity, '.2f')
             temp = format(temp, '.2f')
             logger.debug('GPIO_PORT: {0}, temp: {1}, humidity: {2}'.format(gpio_port,temp,humidity))
             return {'humidity':humidity,'temperature':temp,'gpio_port':gpio_port}
 
+    def write_mongo(self,sensor_dict):
+
+        try:
+            mongo_id = sensor_dict['_id']
+        except:
+            self.mongo_sensors.insert(sensor_dict)
+            logger.debug("dumped sensor_dict to mongodb")
+        else:
+            self.mongo_sensors.replace_one({"_id":mongo_id},sensor_dict)
+            logger.debug("updated sensor_dict in mongodb")
+        return True
+
+    def run(self):
+
+        while True:
+            sensor_dict = self.load_sensor()
+            self.write_mongo(sensor_dict)
+            sleep(self.DELAY)
+
+            if self.stop_loop:
+                break

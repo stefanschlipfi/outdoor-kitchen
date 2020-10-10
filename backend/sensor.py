@@ -41,7 +41,7 @@ class Sensor():
         read dht22 sensor
         return dict
         """
-        humidity,temp = Adafruit_DHT.read_retry(self.DHT_Sensor,gpio_port)
+        humidity,temp = Adafruit_DHT.read(self.DHT_Sensor,gpio_port)
         humidity = format(humidity, '.2f')
         temp = format(temp, '.2f')
         logger.debug('GPIO_PORT: {0}, temp: {1}, humidity: {2}'.format(gpio_port,temp,humidity))
