@@ -4,6 +4,9 @@ flask
 flask-socketio
 eventlet
 
+#for mongodb
+pymongo==3.4.0
+
 #for server tmp
 psutil
 

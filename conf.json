@@ -1,7 +1,7 @@
 {
     "sensors":{
         "DHT22": [
-            {"name":"outdoor-sensor","gpio_port":2} 
+            {"name":"outdoor-sensor","gpio_port":4} 
 	]
     }
 }

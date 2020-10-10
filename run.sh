@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export FLASK_ENV=/opt/python-venv/outdoor-kitchen/bin/python
+source /opt/python-venv/outdoor-kitchen/bin/activate
 export FLASK_APP=/opt/outdoor_kitchen/backend/flask_app.py
 
 export PATH=$PATH:/opt/outdoor_kitchen/backend
