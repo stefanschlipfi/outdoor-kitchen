@@ -1,0 +1,9 @@
+[Unit]
+Description=Outdoor Kitchen Sensor Service
+
+[Service]
+Type=simple
+ExecStart=/opt/python-venv/outdoor-kitchen/bin/python3 /opt/outdoor_kitchen/backend/sensor_start.py
+
+[Install]
+WantedBy=multi-user.target
