@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<head>
+    <!-- CSS only -->
+<title>Server TEMP Monitor</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <!-- JS, Popper.js, and jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+
+
+    <div class="container">
+        <h1>Welecome to Outdoor-Kitchen TEMP Viewer</h1>
+
+        <div id="server-temperature-div">
+            <!-- dynamic created by js -->
+        </div>
+
+    </div>
+
+<script>
+
+    var socket = undefined;
+
+    $(document).ready(function(){
+
+        function gen_progressbar(type,value){
+
+            progress_bar = $('<div/>')
+            progress_bar.addClass('progress')
+
+            progress_item = $('<div/>')
+            progress_item.addClass('progress-bar')
+            progress_item.attr('rule','progressbar')
+            progress_item.attr('aria-valuemin','0')
+            progress_item.attr('aria-valuemax','100')
+            progress_item.innerHTML = value
+            progress_item.css('width',value +'%')
+
+            array = colorset[type]
+            array.forEach(element => {
+                range = element['range']
+                if (value > range[0] && value < range[1])
+                    progress_item.addClass(element['class'])
+            });
+            progress_bar.append(progress_item)
+
+            return progress_bar
+        }
+    
+
+        var colorset = {'temperature': [{'class':'bg-info','range':[0,20]},{'class':'bg-success','range':[20,55]},{'class':'bg-warning','range':[56,65]},{'class':'bg-danger','range':[66-100]}],
+                      'humidity': [{'class':'bg-info','range':[0,20]},{'class':'bg-success','range':[20,55]},{'class':'bg-warning','range':[56,65]},{'class':'bg-danger','range':[66-100]}]} ;
+
+        namespace = '/ws_sensors_v2';
+        socket = io.connect(namespace);
+        var server = $('#server-temperature-div')
+
+        socket.on('sensors_v2',function(msg){
+            
+            server.empty()
+            msg.sensors_list.forEach((props) => {
+                
+               // for (const[name,props] of Object.entries(sensors_dict)){
+                    
+                    label = $('<h5/>')
+                    label.text(props.name + ' Temperature: ' + props.temperature + '°C')
+                    server.append(label)
+                    server.append(gen_progressbar('temperature',props.temperature))
+
+                    server.append($('<br>'))
+                    label = $('<h5/>')
+                    label.text(props.name + ' Humidity: ' + props.humidity + '%')
+                    server.append(label)
+                    server.append(gen_progressbar('humidity',props.humidity))
+                    
+                    timestamp = $('<p/>')
+                    timestamp.text("Timestamp: " + props.timestamp)
+                    server.append(timestamp)
+                    
+              //  }
+            }); 
+        });
+       
+    });
+
+</script>
+
+</body>
