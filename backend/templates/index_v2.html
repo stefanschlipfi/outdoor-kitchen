@@ -54,9 +54,9 @@
         }
     
 
-        var colorset = {'temperature': [{'class':'bg-info','range':[0,20]},{'class':'bg-success','range':[20,55]},{'class':'bg-warning','range':[56,65]},{'class':'bg-danger','range':[66-100]}],
-                      'humidity': [{'class':'bg-info','range':[0,20]},{'class':'bg-success','range':[20,55]},{'class':'bg-warning','range':[56,65]},{'class':'bg-danger','range':[66-100]}]} ;
-
+       var colorset = {'temperature': [{'class':'bg-info','range':[0,17]},{'class':'bg-success','range':[18,30]},{'class':'bg-warning','range':[31,40]},{'class':'bg-danger','range':[41-100]}],
+	       'humidity': [{'class':'bg-danger','range':[0,20]},{'class':'bg-warning','range':[21,49]},{'class':'bg-info','range':[50,60]},{'class':'bg-warning','range':[61,70]},{'class':'bg-danger','range':[71,100]}]} ;
+      
         namespace = '/ws_sensors_v2';
         socket = io.connect(namespace);
         var server = $('#server-temperature-div')
