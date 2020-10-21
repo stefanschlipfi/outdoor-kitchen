@@ -18,9 +18,10 @@ logger = logging.getLogger(logger_name)
 
 #import CPU Thread from thread.py
 from thread import TempThread
+from mongo_observer import MongoObserver
 
-#Websocket Way
-@app.route('/')
+#Websocket old Way
+@app.route('/old/')
 def index():
     return render_template('index.html')
 
@@ -32,6 +33,21 @@ def test_connect():
 
 @socketio.on('disconnect', namespace='/ws_sensors')
 def test_disconnect():
+    logger.debug("Client disconnected")
+
+#Websocket new backend way (mongodb)
+@app.route('/')
+def index_v2():
+    return render_template('index_v2.html')
+
+@socketio.on('connect', namespace='/ws_sensors_v2')
+def connect():
+    logger.debug("Connected with socket.io")
+    thread = MongoObserver(socketio=socketio,namespace='/ws_sensors_v2')
+    thread.start()
+
+@socketio.on('disconnect', namespace='/ws_sensors_v2')
+def disconnect():
     logger.debug("Client disconnected")
 
 

@@ -1,17 +1,16 @@
 import threading
-from utils import *
 import psutil
 from time import sleep
+from datetime import datetime
 
-init_logger(loglevel='DEBUG',filename='aysnc_sensor.log',stream=False,logger_name='sensor')
+from utils import *
+init_logger(loglevel='DEBUG',filename='async_sensor.log',stream=False,logger_name='sensor')
 import logging
 logger = logging.getLogger('sensor')
 
 #dht sensor
 import Adafruit_DHT
 
-#mongo
-from pymongo import MongoClient
 
 class ThreadSensor(threading.Thread):
     def __init__(self,sensor_dict,DELAY = 5):
@@ -23,11 +22,7 @@ class ThreadSensor(threading.Thread):
         self.DELAY = DELAY
         self.stop_loop = False
         
-        #mongo client
-        mongo_client = MongoClient()
-        self.mongo_db = mongo_client["outdoor-kitchen"]
-        self.mongo_sensors = self.mongo_db["sensors"]
-
+        self.mongo_db,self.mongo_sensors = mongo_connect()
 
         if not isinstance(sensor_dict,dict):
             logger.error("sensor_dict musst be a dict")
@@ -42,6 +37,7 @@ class ThreadSensor(threading.Thread):
             raise Exception("sensor_type is required")
         else:
             self.sensor_type = sensor_type.upper()
+            sensor_dict.update({'sensor_type':self.sensor_type})
 
         if bus_id == None and gpio_port == None:
             logger.error("bus_id or gpio_port is required")
@@ -61,12 +57,13 @@ class ThreadSensor(threading.Thread):
             elif not bus_id == None:
                 self.bus_id = bus_id
         
-        self.sensor_dict = sensor_dict
+        self.sensor_dict = sensor_dict.copy()
+        self.unchanged_sensor_dict = sensor_dict.copy()
 
     def load_sensor(self):
         """
         load sensor with attr from sensor_dict
-        return new sensor_dict
+        return new sensor_dict / upated instace sensor_dict
         """
         #remove error if extsts
         try:
@@ -76,6 +73,10 @@ class ThreadSensor(threading.Thread):
 
         if self.sensor_type == "DHT22":
             self.sensor_dict.update(self.load_dht22(self.gpio_port))
+        
+        now = datetime.now()
+        now_str = '{}-{}-{} {}:{}:{}'.format(now.year,now.month,now.day,now.hour,now.minute,now.second)
+        self.sensor_dict.update({'timestamp':now_str})
         return self.sensor_dict
             
 
@@ -86,7 +87,7 @@ class ThreadSensor(threading.Thread):
         return dict
         """
         try:
-            humidity,temp = Adafruit_DHT.read(self.DHT_Sensor,gpio_port)
+            humidity,temp = Adafruit_DHT.read_retry(sensor=self.DHT_Sensor,pin=gpio_port,retries=15)
             if humidity == None and temp == None:
                 raise Exception("cannot read gpio_port")
         except Exception as e:
@@ -99,6 +100,26 @@ class ThreadSensor(threading.Thread):
             logger.debug('GPIO_PORT: {0}, temp: {1}, humidity: {2}'.format(gpio_port,temp,humidity))
             return {'humidity':humidity,'temperature':temp,'gpio_port':gpio_port}
 
+    def get_mongo_itemid(self,sensor_dict):
+        """
+        get objectid from mongo_sensors (sensor_dict)
+        return True,id / False,None
+        """
+        resp = self.mongo_sensors.find(sensor_dict)
+        items = [item for item in resp]
+        logger.debug("mongo find resp_count: {}".format(resp.count()))
+        if resp.count() == 1:
+            logger.debug("found Object_id: {}".format(items[0]['_id']))
+            return True,items[0]['_id']
+        elif resp.count() == 0:
+            logger.debug("no id found in monogodb sensor_dict: {}".format(sensor_dict))
+            return False,None
+        else:
+            for item in items:
+                self.mongo_sensors.delete_one(item)
+                logger.info("removed item from mongodb, {}".format(str(item)))
+            return False,None
+
     def write_mongo(self,sensor_dict):
 
         try:
@@ -108,15 +129,23 @@ class ThreadSensor(threading.Thread):
             logger.debug("dumped sensor_dict to mongodb")
         else:
             self.mongo_sensors.replace_one({"_id":mongo_id},sensor_dict)
-            logger.debug("updated sensor_dict in mongodb")
+            logger.debug("updated sensor_dict in mongodb id: {}".format(sensor_dict['_id']))
         return True
 
     def run(self):
 
         while True:
-            sensor_dict = self.load_sensor()
-            self.write_mongo(sensor_dict)
-            sleep(self.DELAY)
+            self.load_sensor()
+            #check if object id is set
+            try:
+                mongo_id = self.sensor_dict['_id']
+            except:
+                resp_bool,mongo_id = self.get_mongo_itemid(self.unchanged_sensor_dict)
+                if resp_bool:
+                    self.sensor_dict.update({'_id':mongo_id})
+            finally:
+                self.write_mongo(self.sensor_dict)
 
             if self.stop_loop:
                 break
+            sleep(self.DELAY)

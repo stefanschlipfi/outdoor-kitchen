@@ -1,5 +1,5 @@
 from utils import *
-from aysnc_sensor import ThreadSensor
+from async_sensor import ThreadSensor
 
 def load_fromconfig():
     """
@@ -29,7 +29,7 @@ def load_fromconfig():
             continue
         else:
             instance.start()
-            sensors_dict.update({name:{"sensor_config":sensor_config,"aysnc_sensor_instance":instance}})
+            sensors_dict.update({name:{"sensor_config":sensor_config,"async_sensor_instance":instance}})
 
     return sensors_dict
 

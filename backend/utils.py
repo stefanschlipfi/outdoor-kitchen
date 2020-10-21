@@ -1,10 +1,22 @@
 import logging,json
+from pymongo import MongoClient
 
 def load_conf():
-    with open('/opt/outdoor_kitchen/conf.json') as json_file:
+    with open('/etc/outdoor-kitchen/conf.json') as json_file:
         json_obj = json.load(json_file)
 
     return json_obj
+
+def mongo_connect():
+    """
+    connect to mongodb
+    return mongodb and sensors collection
+    """
+    #mongo client
+    mongo_client = MongoClient()
+    mongo_db = mongo_client["outdoor-kitchen"]
+    mongo_sensors = mongo_db["sensors"]
+    return mongo_db,mongo_sensors
 
 def init_logger(loglevel = 'INFO',stream = False,filename='outdoor-kitchen.log',logger_name = 'outdoor-kitchen'):
     loglevel = logging.getLevelName(loglevel.upper())
